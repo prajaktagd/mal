@@ -11,10 +11,9 @@ const PRINT = str => str;
 
 const rep = str => PRINT(EVAL(READ(str)));
 
-const repl = () =>
-    rl.question('user> ', line => {
-        console.log(rep(line));
-        repl();
-    });
+const repl = () => rl.question('user> ', line => {
+    console.log(rep(line));
+    repl();
+});
 
 repl();
