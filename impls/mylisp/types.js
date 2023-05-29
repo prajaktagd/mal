@@ -32,6 +32,10 @@ class MalList extends MalValue {
     prStr() {
         return "(" + prSeqElements(this.value) + ")";
     }
+
+    isEmpty() {
+        return this.value.length === 0;
+    }
 }
 
 class MalVector extends MalValue {
@@ -60,7 +64,8 @@ class MalHashMap extends MalValue {
     }
 
     prStr() {
-        return "{" + prSeqElements(this.value) + "}";
+        const pairs = this.value.map(([k, v]) => `${prStr(k)} ${prStr(v)}`);
+        return "{" + pairs.join(" ") + "}";
     }
 }
 
