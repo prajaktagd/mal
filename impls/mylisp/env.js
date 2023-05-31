@@ -27,4 +27,15 @@ class Env {
     }
 }
 
-module.exports = { Env };
+const createEnv = (outer, binds, exprs) => {
+    const env = new Env(outer);
+
+    if (binds && exprs) {
+        for (let i = 0; i < binds.length; i++) {
+            env.set(binds[i], exprs[i]);
+        }
+    }
+    return env;
+};
+
+module.exports = { createEnv };

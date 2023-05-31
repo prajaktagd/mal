@@ -1,12 +1,15 @@
+const prSeqElements = (seq) => seq.map(prStr).join(" ");
+
 const prStr = (malValue) => {
     if (malValue instanceof MalValue) {
         return malValue.prStr();
     }
+    if ((typeof malValue) === 'function') {
+        return '#<function>';
+    }
 
     return malValue.toString();
 };
-
-const prSeqElements = (seq) => seq.map(prStr).join(" ");
 
 class MalValue {
     constructor(value) {
@@ -26,7 +29,7 @@ class MalSymbol extends MalValue {
 
 class MalList extends MalValue {
     constructor(value) {
-        super(value);
+        super([...value]);
     }
 
     prStr() {
@@ -40,7 +43,7 @@ class MalList extends MalValue {
 
 class MalVector extends MalValue {
     constructor(value) {
-        super(value);
+        super([...value]);
     }
 
     prStr() {
@@ -70,6 +73,5 @@ class MalHashMap extends MalValue {
 }
 
 module.exports = {
-    MalValue, MalSymbol, MalList, MalVector, MalNil, MalHashMap,
-    prStr
+    MalValue, MalSymbol, MalList, MalVector, MalNil, MalHashMap, prStr
 };
