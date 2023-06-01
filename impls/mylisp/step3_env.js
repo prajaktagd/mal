@@ -1,24 +1,13 @@
 const readline = require('readline');
 const { readStr } = require('./reader.js');
 const { prStr, MalSymbol, MalList, MalVector, MalHashMap } = require('./types.js');
-const { Env } = require('./env.js');
+const { createEnv } = require('./env.js');
+const { ns } = require('./core.js');
 
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
-
-const env = new Env();
-env.set(new MalSymbol('+'), (...args) => calculate((a, b) => a + b, args));
-env.set(new MalSymbol('-'), (...args) => calculate((a, b) => a - b, args));
-env.set(new MalSymbol('*'), (...args) => calculate((a, b) => a * b, args));
-env.set(new MalSymbol('/'), (a, b) => a / b);
-
-const calculate = (operation, args) => args.reduce(operation);
-
-const partition = (seq, step) => {
-
-};
 
 const evalAst = (ast, env) => {
     if (ast instanceof MalSymbol) return env.get(ast);
@@ -50,7 +39,7 @@ const EVAL = (ast, env) => {
             return env.set(ast.value[1], EVAL(ast.value[2], env));
 
         case 'let*':
-            const newEnv = new Env(env);
+            const newEnv = createEnv(env);
             const bindings = ast.value[1].value;
             for (let i = 0; i < bindings.length; i += 2) {
                 newEnv.set(bindings[i], EVAL(bindings[i + 1], newEnv));
@@ -63,19 +52,21 @@ const EVAL = (ast, env) => {
     }
 };
 
-const READ = str => readStr(str);
+const READ = (str) => readStr(str);
 
-const PRINT = malValue => prStr(malValue);
+const PRINT = (malValue) => prStr(malValue);
 
-const rep = str => PRINT(EVAL(READ(str), env));
+const rep = (str, env) => PRINT(EVAL(READ(str), env));
 
-const repl = () => rl.question('user> ', line => {
+const repl = (env) => rl.question('user> ', line => {
     try {
-        console.log(rep(line));
+        console.log(rep(line, env));
     } catch (error) {
         console.log(error);
     }
-    repl();
+    repl(env);
 });
 
-repl();
+const env = createEnv();
+Object.entries(ns).forEach(([symbol, value]) => env.set(new MalSymbol(symbol), value));
+repl(env);

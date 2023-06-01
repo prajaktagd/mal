@@ -1,4 +1,4 @@
-const prSeqElements = (seq) => seq.map(prStr).join(" ");
+const prSeqElements = (seq) => seq.map(prStr).join(' ');
 
 const prStr = (malValue) => {
     if (malValue instanceof MalValue) {
@@ -21,6 +21,16 @@ class MalValue {
     }
 }
 
+class MalString extends MalValue {
+    constructor(value) {
+        super(value);
+    }
+
+    prStr() {
+        return `\"${this.value}\"`;
+    }
+}
+
 class MalSymbol extends MalValue {
     constructor(value) {
         super(value);
@@ -33,7 +43,7 @@ class MalList extends MalValue {
     }
 
     prStr() {
-        return "(" + prSeqElements(this.value) + ")";
+        return '(' + prSeqElements(this.value) + ')';
     }
 
     isEmpty() {
@@ -47,7 +57,7 @@ class MalVector extends MalValue {
     }
 
     prStr() {
-        return "[" + prSeqElements(this.value) + "]";
+        return '[' + prSeqElements(this.value) + ']';
     }
 }
 
@@ -57,7 +67,7 @@ class MalNil extends MalValue {
     }
 
     prStr() {
-        return "nil";
+        return 'nil';
     }
 }
 
@@ -68,10 +78,11 @@ class MalHashMap extends MalValue {
 
     prStr() {
         const pairs = this.value.map(([k, v]) => `${prStr(k)} ${prStr(v)}`);
-        return "{" + pairs.join(" ") + "}";
+        return '{' + pairs.join(' ') + '}';
     }
 }
 
 module.exports = {
-    MalValue, MalSymbol, MalList, MalVector, MalNil, MalHashMap, prStr
+    MalValue, MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalString,
+    prStr
 };
