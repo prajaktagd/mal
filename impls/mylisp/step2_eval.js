@@ -48,7 +48,7 @@ const EVAL = (ast, env) => {
 
 const READ = str => readStr(str);
 
-const PRINT = malValue => prStr(malValue);
+const PRINT = malValue => prStr(malValue, true);
 
 const rep = str => PRINT(EVAL(READ(str), env));
 

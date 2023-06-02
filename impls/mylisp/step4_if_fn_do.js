@@ -43,11 +43,11 @@ const EVAL = (ast, env) => {
 
         case 'let*':
             const newEnv = createEnv(env);
-            const bindings = ast.value[1].value;
-            for (let i = 0; i < bindings.length; i += 2) {
-                newEnv.set(bindings[i], EVAL(bindings[i + 1], newEnv));
+            const binds = ast.value[1].value;
+            for (let i = 0; i < binds.length; i += 2) {
+                newEnv.set(binds[i], EVAL(binds[i + 1], newEnv));
             }
-            return EVAL(ast.value[2], newEnv);
+            return EVAL(new MalList([new MalSymbol('do'), ...ast.value.slice(2)]), newEnv);
 
         case 'do':
             return ast.value.slice(1).reduce((_, statement) => EVAL(statement, env), 0);
@@ -60,8 +60,8 @@ const EVAL = (ast, env) => {
         case 'fn*':
             return (...args) => {
                 const newEnv = createEnv(env, ast.value[1].value, args);
-                const doList = [new MalSymbol('do'), ...ast.value.slice(2)];
-                return EVAL(new MalList(doList), newEnv);
+                const doForms = new MalList([new MalSymbol('do'), ...ast.value.slice(2)]);
+                return EVAL(doForms, newEnv);
             }
 
         default:
@@ -72,7 +72,7 @@ const EVAL = (ast, env) => {
 
 const READ = (str) => readStr(str);
 
-const PRINT = (malValue) => prStr(malValue);
+const PRINT = (malValue) => prStr(malValue, true);
 
 const rep = (str, env) => PRINT(EVAL(READ(str), env));
 

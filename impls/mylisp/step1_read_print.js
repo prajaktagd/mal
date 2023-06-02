@@ -7,9 +7,9 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
-const READ = str => readStr(str);
-const EVAL = str => str;
-const PRINT = malValue => prStr(malValue);
+const READ = (str) => readStr(str);
+const EVAL = (str) => str;
+const PRINT = (malValue) => prStr(malValue, true);
 
 const rep = str => PRINT(EVAL(READ(str)));
 

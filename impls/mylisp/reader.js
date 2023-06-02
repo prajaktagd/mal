@@ -22,6 +22,24 @@ const tokenize = (str) => {
     return [...str.matchAll(re)].map((x) => x[1]).slice(0, -1);
 };
 
+const isNotBalanced = (str) => {
+    if (str.slice(-1) === '\"') {
+        if (str.slice(-3) === '\\\\\"') {
+            return false;
+        }
+        if (str.slice(-2) === '\\\"') {
+            return true;
+        }
+        return false;
+    }
+    return true;
+};
+
+const transform = (str) => str
+    .replace(/\\n/g, '\n')
+    .replace(/\\"/g, '\"')
+    .replace(/\\\\/g, '\\');
+
 const readSeq = (reader, closingSymbol) => {
     reader.next();
     const ast = [];
@@ -57,24 +75,17 @@ const readHashMap = (reader) => {
 const readAtom = (reader) => {
     const token = reader.next();
 
-    if (token.match(/^-?[0-9]+$/)) {
-        return parseInt(token);
-    }
-    if (token.match(/^-?[0-9]+.[0-9]+$/)) {
-        return parseFloat(token);
-    }
-    if (token.match(/^".*"$/)) {
-        return new MalString(token.slice(1, -1));
-    }
-    if (token === 'true') {
-        return true;
-    }
-    if (token === 'false') {
-        return false;
-    }
-    if (token === 'nil') {
-        return new MalNil();
-    }
+    if (token === 'true') return true;
+    if (token === 'false') return false;
+    if (token === 'nil') return new MalNil();
+    if (token.match(/^-?[0-9]+$/)) return parseInt(token);
+    if (token.match(/^-?[0-9]+.[0-9]+$/)) return parseFloat(token);
+    if (token.match(/^"/)) {
+        if (isNotBalanced(token.slice(1))) {
+            throw 'unbalanced';
+        }
+        return new MalString(transform(token.slice(1, -1)))
+    };
     return new MalSymbol(token);
 };
 

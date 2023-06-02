@@ -10,9 +10,9 @@ const toPrintedRepresentation = (str) => {
 
 const prStr = (malValue, printReadably) => {
     if (malValue instanceof MalValue) {
-        // if (printReadably && malValue instanceof MalString) {
-        //     return `"${toPrintedRepresentation(malValue.prStr())}"`;
-        // }
+        if (printReadably && malValue instanceof MalString) {
+            return `"${toPrintedRepresentation(malValue.prStr())}"`;
+        }
         return malValue.prStr();
     }
 
