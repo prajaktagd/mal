@@ -1,11 +1,19 @@
 const prSeqElements = (seq) => seq.map(prStr).join(' ');
 
-const prStr = (malValue) => {
+const toPrintedRepresentation = (str) => {
+    const newLocal = str
+        .replace(/\\/g, '\\\\')
+        .replace(/\n/g, '\\n')
+        .replace(/\"/g, '\\\"');
+    return newLocal;
+};
+
+const prStr = (malValue, printReadably) => {
     if (malValue instanceof MalValue) {
+        // if (printReadably && malValue instanceof MalString) {
+        //     return `"${toPrintedRepresentation(malValue.prStr())}"`;
+        // }
         return malValue.prStr();
-    }
-    if ((typeof malValue) === 'function') {
-        return '#<function>';
     }
 
     return malValue.toString();
@@ -27,7 +35,7 @@ class MalString extends MalValue {
     }
 
     prStr() {
-        return `\"${this.value}\"`;
+        return this.value;
     }
 }
 
@@ -77,12 +85,24 @@ class MalHashMap extends MalValue {
     }
 
     prStr() {
-        const pairs = this.value.map(([k, v]) => `${prStr(k)} ${prStr(v)}`);
+        const pairs = this.value.map(([k, v]) => `${prStr(k)} ${prStr(v)} `);
         return '{' + pairs.join(' ') + '}';
+    }
+}
+
+class MalFunction extends MalValue {
+    constructor(ast, binds, env) {
+        super(ast);
+        this.binds = binds;
+        this.env = env;
+    }
+
+    prStr() {
+        return '#<function>';
     }
 }
 
 module.exports = {
     MalValue, MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalString,
-    prStr
+    MalFunction, prStr
 };
