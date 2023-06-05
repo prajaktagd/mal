@@ -62,7 +62,7 @@ const EVAL = (ast, env) => {
                 const newEnv = createEnv(env, ast.value[1].value, args);
                 const doForms = new MalList([new MalSymbol('do'), ...ast.value.slice(2)]);
                 return EVAL(doForms, newEnv);
-            }
+            };
 
         default:
             const [fn, ...args] = evalAst(ast, env).value;

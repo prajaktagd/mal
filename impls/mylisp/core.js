@@ -1,5 +1,7 @@
 const { deepEqual } = require('./deepEqual.js');
-const { prStr, MalNil, MalList } = require('./types.js');
+const { readStr } = require('./reader.js');
+const { prStr, MalNil, MalList, MalString, MalAtom } = require('./types.js');
+const fs = require('fs');
 
 const calculate = (operation, args) => args.reduce(operation);
 
@@ -17,8 +19,8 @@ const isEmpty = (a) => {
     return a.value === null ? true : a.value.length === 0;
 };
 
-const prn = (...args) => {
-    console.log(...args.map(prStr));
+const print = (args, printReadably) => {
+    console.log(...args.map((arg) => prStr(arg, printReadably)));
     return new MalNil();
 };
 
@@ -32,13 +34,27 @@ const ns = {
     '<=': (a, b) => a <= b,
     '>=': (a, b) => a >= b,
     '=': (a, b) => deepEqual(a, b),
-    'prn': prn,
-    'println': prn,
-    'pr-str': prn,
+    'prn': (...args) => print(args, true),
+    'println': (...args) => print(args, false),
+    'pr-str': (...args) => {
+        const str = args.map((arg) => prStr(arg, true)).join(' ');
+        return new MalString(str);
+    },
+    'str': (...args) => {
+        const str = args.map((arg) => prStr(arg, false)).join('');
+        return new MalString(str);
+    },
     'list': (...args) => new MalList(args),
     'count': count,
     'empty?': isEmpty,
-    'list?': (a) => a instanceof MalList
+    'list?': (a) => a instanceof MalList,
+    'read-string': (str) => readStr(str.value),
+    'slurp': (filename) => new MalString(fs.readFileSync(filename.value, 'utf8')),
+    'atom': (malValue) => new MalAtom(malValue),
+    'atom?': (atom) => atom instanceof MalAtom,
+    'deref': (atom) => atom.deref(),
+    'reset!': (atom, malValue) => atom.reset(malValue),
+    'swap!': (atom, func, ...args) => atom.swap(func, args)
 };
 
 module.exports = { ns };

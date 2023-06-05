@@ -1,6 +1,8 @@
 fileignoreconfig:
 - filename: impls/mylisp/env.js
   checksum: d85ff0b6e314ad6c266ff98c91b1fc36057086995df6c064709fafe79f19b66d
+- filename: impls/mylisp/reader.js
+  checksum: 0c03d5197efb28cbeeb333b7725e8eb42d6880ef7bd93fd402e71a28998f9717
 - filename: impls/mylisp/step3_env.js
   checksum: c3a3ffb2cfa71a371f7893a38e3cfb6d6164a5176d94ccfe33ab43906dc5ff22
 version: "1.0"

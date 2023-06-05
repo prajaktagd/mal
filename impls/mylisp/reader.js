@@ -1,4 +1,6 @@
-const { MalList, MalVector, MalSymbol, MalNil, MalHashMap, MalString } = require('./types');
+const { MalList, MalVector, MalSymbol, MalNil, MalHashMap, MalString, MalKeyword } = require('./types');
+
+class NoInputException extends Error { }
 
 class Reader {
     constructor(tokens) {
@@ -19,7 +21,9 @@ class Reader {
 
 const tokenize = (str) => {
     const re = /[\s,]*(~@|[\[\]{}()'`~^@]|"(?:\\.|[^\\"])*"?|;.*|[^\s\[\]{}('"`,;)]*)/g;
-    return [...str.matchAll(re)].map((x) => x[1]).slice(0, -1);
+    return [...str.matchAll(re)].map((x) => x[1])
+        .slice(0, -1)
+        .filter(x => !x.startsWith(";"));
 };
 
 const isNotBalanced = (str) => {
@@ -80,7 +84,8 @@ const readAtom = (reader) => {
     if (token === 'nil') return new MalNil();
     if (token.match(/^-?[0-9]+$/)) return parseInt(token);
     if (token.match(/^-?[0-9]+.[0-9]+$/)) return parseFloat(token);
-    if (token.match(/^"/)) {
+    if (token.startsWith(':')) return new MalKeyword(token.slice(1));
+    if (token.startsWith('"')) {
         if (isNotBalanced(token.slice(1))) {
             throw 'unbalanced';
         }
@@ -98,6 +103,9 @@ const readForm = (reader) => {
             return readVector(reader);
         case '{':
             return readHashMap(reader);
+        case '@':
+            reader.next();
+            return new MalList([new MalSymbol('deref'), readForm(reader)]);
         default:
             return readAtom(reader);
     }
@@ -105,8 +113,10 @@ const readForm = (reader) => {
 
 const readStr = (str) => {
     const tokens = tokenize(str);
+    if (tokens.length === 0) throw new NoInputException();
+
     const reader = new Reader(tokens);
     return readForm(reader);
 };
 
-module.exports = { readStr };
+module.exports = { readStr, NoInputException };
