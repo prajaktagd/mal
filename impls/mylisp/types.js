@@ -1,3 +1,5 @@
+const { deepEqual } = require('./deepEqual.js');
+
 const prSeqElements = (seq) => seq.map(prStr).join(' ');
 
 const toPrintedRepresentation = (str) => str
@@ -35,6 +37,10 @@ class MalString extends MalValue {
     prStr() {
         return this.value;
     }
+
+    equals(otherMalString) {
+        return otherMalString instanceof MalString && deepEqual(this.value, otherMalString.value);
+    }
 }
 
 class MalKeyword extends MalValue {
@@ -45,35 +51,62 @@ class MalKeyword extends MalValue {
     prStr() {
         return `:${this.value}`;
     }
+
+    equals(otherMalKeyword) {
+        return otherMalKeyword instanceof MalKeyword && deepEqual(this.value, otherMalKeyword.value);
+    }
 }
 
 class MalSymbol extends MalValue {
     constructor(value) {
         super(value);
     }
+
+    equals(otherMalSymbol) {
+        return otherMalSymbol instanceof MalSymbol && deepEqual(this.value, otherMalSymbol.value);
+    }
 }
 
-class MalList extends MalValue {
+
+class MalSequence extends MalValue {
     constructor(value) {
         super([...value]);
+    }
+
+    isEmpty() {
+        return this.value.length === 0;
+    }
+
+    beginsWith(symbol) {
+        return !(this.isEmpty()) && (this.value[0].value === symbol);
+    }
+}
+
+class MalList extends MalSequence {
+    constructor(value) {
+        super(value);
     }
 
     prStr() {
         return '(' + prSeqElements(this.value) + ')';
     }
 
-    isEmpty() {
-        return this.value.length === 0;
+    equals(otherMalList) {
+        return otherMalList instanceof MalList && deepEqual(this.value, otherMalList.value);
     }
 }
 
-class MalVector extends MalValue {
+class MalVector extends MalSequence {
     constructor(value) {
-        super([...value]);
+        super(value);
     }
 
     prStr() {
         return '[' + prSeqElements(this.value) + ']';
+    }
+
+    equals(otherMalVector) {
+        return otherMalVector instanceof MalVector && deepEqual(this.value, otherMalVector.value);
     }
 }
 
@@ -85,6 +118,10 @@ class MalNil extends MalValue {
     prStr() {
         return 'nil';
     }
+
+    equals(otherMalNil) {
+        return otherMalNil instanceof MalNil && deepEqual(this.value, otherMalNil.value);
+    }
 }
 
 class MalHashMap extends MalValue {
@@ -93,8 +130,12 @@ class MalHashMap extends MalValue {
     }
 
     prStr() {
-        const pairs = this.value.map(([k, v]) => `${prStr(k)} ${prStr(v)} `);
+        const pairs = this.value.map(([k, v]) => `${prStr(k)} ${prStr(v)}`);
         return '{' + pairs.join(' ') + '}';
+    }
+
+    equals(otherMalHashMap) {
+        return otherMalHashMap instanceof MalHashMap && deepEqual(this.value, otherMalHashMap.value);
     }
 }
 
@@ -112,6 +153,10 @@ class MalFunction extends MalValue {
 
     prStr() {
         return '#<function>';
+    }
+
+    equals(otherMalFunction) {
+        return otherMalFunction instanceof MalFunction && deepEqual(this.value, otherMalFunction.value);
     }
 }
 
@@ -137,9 +182,13 @@ class MalAtom extends MalValue {
     prStr() {
         return `(atom ${this.value})`;
     }
+
+    equals(otherMalAtom) {
+        return otherMalAtom instanceof MalAtom && deepEqual(this.value, otherMalAtom.value);
+    }
 }
 
 module.exports = {
-    MalValue, MalSymbol, MalList, MalVector, MalNil, MalHashMap, MalString,
+    MalValue, MalSymbol, MalSequence, MalList, MalVector, MalNil, MalHashMap, MalString,
     MalFunction, MalAtom, MalKeyword, prStr
 };

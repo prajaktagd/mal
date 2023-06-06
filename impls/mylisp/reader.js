@@ -44,6 +44,11 @@ const transform = (str) => str
     .replace(/\\"/g, '\"')
     .replace(/\\\\/g, '\\');
 
+const prependSymbol = (symbol, reader) => {
+    reader.next();
+    return new MalList([new MalSymbol(symbol), readForm(reader)]);
+};
+
 const readSeq = (reader, closingSymbol) => {
     reader.next();
     const ast = [];
@@ -104,8 +109,15 @@ const readForm = (reader) => {
         case '{':
             return readHashMap(reader);
         case '@':
-            reader.next();
-            return new MalList([new MalSymbol('deref'), readForm(reader)]);
+            return prependSymbol('deref', reader);
+        case "'":
+            return prependSymbol('quote', reader);
+        case "`":
+            return prependSymbol('quasiquote', reader);
+        case "~":
+            return prependSymbol('unquote', reader);
+        case "~@":
+            return prependSymbol('splice-unquote', reader);
         default:
             return readAtom(reader);
     }

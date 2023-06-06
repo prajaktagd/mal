@@ -5,4 +5,6 @@ fileignoreconfig:
   checksum: 0c03d5197efb28cbeeb333b7725e8eb42d6880ef7bd93fd402e71a28998f9717
 - filename: impls/mylisp/step3_env.js
   checksum: c3a3ffb2cfa71a371f7893a38e3cfb6d6164a5176d94ccfe33ab43906dc5ff22
+- filename: impls/mylisp/types.js
+  checksum: c65321b9b82d22992b151c98e8504f854a50010fec393f32380e808392566345
 version: "1.0"

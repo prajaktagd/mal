@@ -1,6 +1,6 @@
 const { deepEqual } = require('./deepEqual.js');
 const { readStr } = require('./reader.js');
-const { prStr, MalNil, MalList, MalString, MalAtom } = require('./types.js');
+const { prStr, MalNil, MalList, MalString, MalAtom, MalVector, MalValue } = require('./types.js');
 const fs = require('fs');
 
 const calculate = (operation, args) => args.reduce(operation);
@@ -33,7 +33,7 @@ const ns = {
     '>': (a, b) => a > b,
     '<=': (a, b) => a <= b,
     '>=': (a, b) => a >= b,
-    '=': (a, b) => deepEqual(a, b),
+    '=': (a, b) => a instanceof MalValue ? a.equals(b) : deepEqual(a, b),
     'prn': (...args) => print(args, true),
     'println': (...args) => print(args, false),
     'pr-str': (...args) => {
@@ -54,7 +54,10 @@ const ns = {
     'atom?': (atom) => atom instanceof MalAtom,
     'deref': (atom) => atom.deref(),
     'reset!': (atom, malValue) => atom.reset(malValue),
-    'swap!': (atom, func, ...args) => atom.swap(func, args)
+    'swap!': (atom, func, ...args) => atom.swap(func, args),
+    'cons': (value, list) => new MalList([value, ...list.value]),
+    'concat': (...lists) => new MalList(lists.flatMap((list) => list.value)),
+    'vec': (list) => new MalVector(list.value)
 };
 
 module.exports = { ns };

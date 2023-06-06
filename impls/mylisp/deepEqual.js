@@ -1,13 +1,8 @@
-const { MalValue } = require('./types.js');
-
 const areBothArrays = (element1, element2) => {
     return Array.isArray(element1) && Array.isArray(element2);
 };
 
-const deepEqual = (malValue1, malValue2) => {
-    const list1 = malValue1 instanceof MalValue ? malValue1.value : malValue1;
-    const list2 = malValue2 instanceof MalValue ? malValue2.value : malValue2;
-
+const deepEqual = (list1, list2) => {
     if (!areBothArrays(list1, list2)) {
         return list1 === list2;
     }
