@@ -87,6 +87,6 @@ const repl = (env) => rl.question('user> ', line => {
 
 const env = createEnv();
 Object.entries(ns).forEach(([symbol, value]) => env.set(new MalSymbol(symbol), value));
-env.set(new MalSymbol('not'), (a) => rep(`((fn* [a] (if a false true)) ${prStr(a)})`, env));
+rep('(def! not (fn* [a] (if a false true)))', env);
 
 repl(env);

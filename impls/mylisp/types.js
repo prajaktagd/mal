@@ -29,6 +29,35 @@ class MalValue {
     }
 }
 
+class MalSequence extends MalValue {
+    constructor(value) {
+        super([...value]);
+    }
+
+    isEmpty() {
+        return this.value.length === 0;
+    }
+
+    beginsWith(symbol) {
+        return !(this.isEmpty()) && (this.value[0].value === symbol);
+    }
+
+    nth(n) {
+        if (n >= this.value.length) {
+            throw 'index out of bound';
+        }
+        return this.value[n];
+    }
+
+    first() {
+        return this.isEmpty() ? new MalNil() : this.value[0];
+    }
+
+    rest() {
+        return new MalList(this.value.slice(1));
+    }
+}
+
 class MalString extends MalValue {
     constructor(value) {
         super(value);
@@ -64,21 +93,6 @@ class MalSymbol extends MalValue {
 
     equals(otherMalSymbol) {
         return otherMalSymbol instanceof MalSymbol && deepEqual(this.value, otherMalSymbol.value);
-    }
-}
-
-
-class MalSequence extends MalValue {
-    constructor(value) {
-        super([...value]);
-    }
-
-    isEmpty() {
-        return this.value.length === 0;
-    }
-
-    beginsWith(symbol) {
-        return !(this.isEmpty()) && (this.value[0].value === symbol);
     }
 }
 
@@ -140,11 +154,12 @@ class MalHashMap extends MalValue {
 }
 
 class MalFunction extends MalValue {
-    constructor(ast, binds, env, func) {
+    constructor(ast, binds, env, func, isMacro = false) {
         super(ast);
         this.binds = binds;
         this.env = env;
         this.func = func;
+        this.isMacro = isMacro
     }
 
     apply(context, args) {

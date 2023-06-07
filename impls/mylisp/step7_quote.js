@@ -138,8 +138,8 @@ const main = () => {
     const env = createEnv();
 
     Object.entries(ns).forEach(([symbol, value]) => env.set(new MalSymbol(symbol), value));
-    env.set(new MalSymbol('not'), (a) => rep(`((fn* [a] (if a false true)) ${prStr(a)})`, env));
     env.set(new MalSymbol('eval'), (ast) => EVAL(ast, env));
+    rep('(def! not (fn* [a] (if a false true)))', env);
     rep('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))', env);
 
     repl(env);

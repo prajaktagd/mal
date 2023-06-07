@@ -1,6 +1,6 @@
 const readline = require('readline');
 const { readStr, NoInputException } = require('./reader.js');
-const { prStr, MalSymbol, MalList, MalVector, MalHashMap, MalNil, MalFunction, MalString } = require('./types.js');
+const { prStr, MalSymbol, MalList, MalVector, MalHashMap, MalNil, MalFunction, MalString, MalSequence } = require('./types.js');
 const { createEnv } = require('./env.js');
 const { ns } = require('./core.js');
 
@@ -11,6 +11,50 @@ const rl = readline.createInterface({
 
 const isFalsy = (element) => element instanceof MalNil || element === false;
 const isTrue = (predicate, env) => !isFalsy(EVAL(predicate, env));
+
+const quasiquote = (ast) => {
+    if (ast instanceof MalSymbol || ast instanceof MalHashMap) {
+        return new MalList([new MalSymbol('quote'), ast]);
+    }
+    if (ast instanceof MalList && ast.beginsWith('unquote')) return ast.value[1];
+
+    if (ast instanceof MalSequence) {
+        let result = new MalList([]);
+        for (let index = ast.value.length - 1; index >= 0; index--) {
+            const element = ast.value[index];
+            if (element instanceof MalList && element.beginsWith('splice-unquote')) {
+                result = new MalList([new MalSymbol('concat'), element.value[1], result]);
+            } else {
+                result = new MalList([new MalSymbol('cons'), quasiquote(element), result]);
+            }
+        }
+
+        if (ast instanceof MalList) return result;
+        return new MalList([new MalSymbol('vec'), result]);
+    }
+
+    return ast;
+};
+
+const isMacroCall = (ast, env) => {
+    try {
+        return (ast instanceof MalList
+            && !ast.isEmpty()
+            && ast.value[0] instanceof MalSymbol
+            && env.get(ast.value[0]).isMacro);
+    } catch {
+        return false;
+    }
+};
+
+const macroExpand = (ast, env) => {
+    while (isMacroCall(ast, env)) {
+        const macrofn = env.get(ast.value[0]);
+        ast = macrofn.apply(null, ast.value.slice(1));
+    }
+
+    return ast;
+};
 
 const evalAst = (ast, env) => {
     if (ast instanceof MalSymbol) return env.get(ast);
@@ -38,9 +82,20 @@ const EVAL = (ast, env) => {
         if (!(ast instanceof MalList)) return evalAst(ast, env);
         if (ast.isEmpty()) return ast;
 
+        ast = macroExpand(ast, env);
+        if (!(ast instanceof MalList)) return evalAst(ast, env);
+
         switch (ast.value[0].value) {
             case 'def!':
                 return env.set(ast.value[1], EVAL(ast.value[2], env));
+
+            case 'defmacro!':
+                const macro = EVAL(ast.value[2], env);
+                macro.isMacro = true;
+                return env.set(ast.value[1], macro);
+
+            case 'macroexpand':
+                return macroExpand(ast.value[1], env);
 
             case 'let*':
                 const newEnv = createEnv(env);
@@ -63,6 +118,16 @@ const EVAL = (ast, env) => {
                     : ast.value[3] !== undefined ? ast.value[3] : new MalNil();
                 break;
 
+            case 'quote':
+                return ast.value[1];
+
+            case 'quasiquote':
+                ast = quasiquote(ast.value[1]);
+                break;
+
+            case 'quasiquoteexpand':
+                return quasiquote(ast.value[1]);
+
             case 'fn*':
                 const doForms = new MalList([new MalSymbol('do'), ...ast.value.slice(2)]);
                 const bindsList = ast.value[1].value;
@@ -78,7 +143,8 @@ const EVAL = (ast, env) => {
                     ast = fn.value;
                     env = createEnv(fn.env, fn.binds, args);
                 } else {
-                    return fn.apply(null, args);
+                    res = fn.apply(null, args)
+                    return res;
                 }
         }
     }
@@ -104,8 +170,9 @@ const main = () => {
 
     Object.entries(ns).forEach(([symbol, value]) => env.set(new MalSymbol(symbol), value));
     env.set(new MalSymbol('eval'), (ast) => EVAL(ast, env));
-    rep('(def! not (fn* [a] (if a false true)))', env);
     rep('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))', env);
+    rep("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))", env);
+    rep('(def! not (fn* [a] (if a false true)))', env);
 
     repl(env);
 };
