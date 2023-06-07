@@ -1,4 +1,4 @@
-const { MalList } = require("./types");
+const { MalList } = require('./types.js');
 
 class Env {
     constructor(outer) {
@@ -23,6 +23,7 @@ class Env {
     get(symbol) {
         const env = this.find(symbol);
         if (!env) {
+            console.log(symbol, "---");
             throw `${symbol.value} not found`;
         }
         return env.data[symbol.value];

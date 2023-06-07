@@ -1,8 +1,9 @@
 const readline = require('readline');
 const { readStr, NoInputException } = require('./reader.js');
-const { prStr, MalSymbol, MalList, MalVector, MalHashMap, MalNil, MalFunction, MalString, MalSequence } = require('./types.js');
-const { createEnv } = require('./env.js');
 const { ns } = require('./core.js');
+const { createEnv } = require('./env.js');
+const { prStr, MalSymbol, MalList, MalVector, MalHashMap, MalNil, MalFunction,
+    MalSequence } = require('./types.js');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -79,11 +80,9 @@ const evalAst = (ast, env) => {
 
 const EVAL = (ast, env) => {
     while (true) {
-        if (!(ast instanceof MalList)) return evalAst(ast, env);
-        if (ast.isEmpty()) return ast;
-
         ast = macroExpand(ast, env);
         if (!(ast instanceof MalList)) return evalAst(ast, env);
+        if (ast.isEmpty()) return ast;
 
         switch (ast.value[0].value) {
             case 'def!':
@@ -139,13 +138,7 @@ const EVAL = (ast, env) => {
 
             default:
                 const [fn, ...args] = evalAst(ast, env).value;
-                if (fn instanceof MalFunction) {
-                    ast = fn.value;
-                    env = createEnv(fn.env, fn.binds, args);
-                } else {
-                    res = fn.apply(null, args)
-                    return res;
-                }
+                return fn.apply(null, args)
         }
     }
 };
@@ -169,10 +162,24 @@ const main = () => {
     const env = createEnv();
 
     Object.entries(ns).forEach(([symbol, value]) => env.set(new MalSymbol(symbol), value));
+
+    const coreFns = [
+        '(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))',
+        "(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))",
+        '(def! not (fn* [a] (if a false true)))'
+    ];
+    coreFns.forEach((fn) => rep(fn, env));
+
     env.set(new MalSymbol('eval'), (ast) => EVAL(ast, env));
-    rep('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))', env);
-    rep("(defmacro! cond (fn* (& xs) (if (> (count xs) 0) (list 'if (first xs) (if (> (count xs) 1) (nth xs 1) (throw \"odd number of forms to cond\")) (cons 'cond (rest (rest xs)))))))", env);
-    rep('(def! not (fn* [a] (if a false true)))', env);
+    env.set(new MalSymbol('*ARGV*'), new MalList([]));
+
+    if (process.argv.length >= 3) {
+        const argv = process.argv.slice(3).map((arg) => new MalString(arg));
+        env.set(new MalSymbol('*ARGV*'), new MalList(argv));
+
+        rep(`(load-file "${process.argv[2]}")`, env);
+        return rl.close();
+    }
 
     repl(env);
 };

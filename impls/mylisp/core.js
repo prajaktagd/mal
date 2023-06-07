@@ -1,7 +1,7 @@
-const { deepEqual } = require('./deepEqual.js');
-const { readStr } = require('./reader.js');
-const { prStr, MalNil, MalList, MalString, MalAtom, MalVector, MalValue } = require('./types.js');
 const fs = require('fs');
+const { readStr } = require('./reader.js');
+const { MalNil, MalList, MalString, MalAtom, MalVector, MalValue,
+    prSeqElements, deepEqual } = require('./types.js');
 
 const calculate = (operation, args) => args.reduce(operation);
 
@@ -14,13 +14,13 @@ const count = (a) => {
 
 const isEmpty = (a) => {
     if (a.value === undefined) {
-        throw "Don't know how to create ISeq from this type";
+        throw "don't know how to create ISeq from this type";
     }
     return a.value === null ? true : a.value.length === 0;
 };
 
 const print = (args, printReadably) => {
-    console.log(...args.map((arg) => prStr(arg, printReadably)));
+    console.log(prSeqElements(args, printReadably, ' '));
     return new MalNil();
 };
 
@@ -34,21 +34,15 @@ const ns = {
     '<=': (a, b) => a <= b,
     '>=': (a, b) => a >= b,
     '=': (a, b) => a instanceof MalValue ? a.equals(b) : deepEqual(a, b),
-    'prn': (...args) => print(args, true),
-    'println': (...args) => print(args, false),
-    'pr-str': (...args) => {
-        const str = args.map((arg) => prStr(arg, true)).join(' ');
-        return new MalString(str);
-    },
-    'str': (...args) => {
-        const str = args.map((arg) => prStr(arg, false)).join('');
-        return new MalString(str);
-    },
-    'list': (...args) => new MalList(args),
     'count': count,
     'empty?': isEmpty,
-    'list?': (a) => a instanceof MalList,
+    'prn': (...args) => print(args, true),
+    'println': (...args) => print(args, false),
+    'pr-str': (...args) => new MalString(prSeqElements(args, true, ' ')),
+    'str': (...args) => new MalString(prSeqElements(args, false, '')),
     'read-string': (str) => readStr(str.value),
+    'list': (...args) => new MalList(args),
+    'list?': (a) => a instanceof MalList,
     'slurp': (filename) => new MalString(fs.readFileSync(filename.value, 'utf8')),
     'atom': (malValue) => new MalAtom(malValue),
     'atom?': (atom) => atom instanceof MalAtom,

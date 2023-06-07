@@ -108,13 +108,7 @@ const EVAL = (ast, env) => {
 
             default:
                 const [fn, ...args] = evalAst(ast, env).value;
-                if (fn instanceof MalFunction) {
-                    ast = fn.value;
-                    env = createEnv(fn.env, fn.binds, args);
-                } else {
-                    res = fn.apply(null, args)
-                    return res;
-                }
+                return fn.apply(null, args)
         }
     }
 };
@@ -138,10 +132,20 @@ const main = () => {
     const env = createEnv();
 
     Object.entries(ns).forEach(([symbol, value]) => env.set(new MalSymbol(symbol), value));
-    env.set(new MalSymbol('eval'), (ast) => EVAL(ast, env));
+
     rep('(def! not (fn* [a] (if a false true)))', env);
     rep('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))', env);
 
+    env.set(new MalSymbol('eval'), (ast) => EVAL(ast, env));
+    env.set(new MalSymbol('*ARGV*'), new MalList([]));
+
+    if (process.argv.length >= 3) {
+        const argv = process.argv.slice(3).map((arg) => new MalString(arg));
+        env.set(new MalSymbol('*ARGV*'), new MalList(argv));
+
+        rep(`(load-file "${process.argv[2]}")`, env);
+        return rl.close();
+    }
     repl(env);
 };
 

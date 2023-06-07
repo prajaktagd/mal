@@ -1,4 +1,5 @@
-const { MalList, MalVector, MalSymbol, MalNil, MalHashMap, MalString, MalKeyword } = require('./types');
+const { MalList, MalVector, MalSymbol, MalNil, MalHashMap, MalString,
+    MalKeyword } = require('./types.js');
 
 class NoInputException extends Error { }
 
